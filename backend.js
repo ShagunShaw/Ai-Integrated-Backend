@@ -20,7 +20,7 @@ const upload = multer({
   }
 });
 
-// Route to handle frontend requests
+
 app.post("/ask-ai", upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -29,7 +29,7 @@ app.post("/ask-ai", upload.single('image'), async (req, res) => {
 
     const fileBase64 = req.file.buffer.toString('base64');
 
-    // Send to Python backend
+    // Calling the python API
     const response = await axios.post('http://localhost:5000/process-image', {
       image: fileBase64,
       filename: req.file.originalname,

@@ -5,19 +5,18 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 
-# Load environment variables
+
 load_dotenv()
 
-# Initialize FastAPI app
 app = FastAPI()
 
-# Configure the Gemini model
+
 genai.configure(api_key=os.getenv("API_KEY"))
 model = genai.GenerativeModel("gemini-2.0-flash")
 
-# Request body model
+# Body of the incoming request
 class ImageRequest(BaseModel):
-    image: str  # base64 string
+    image: str  
     filename: str
     mimetype: str
 
@@ -26,7 +25,6 @@ async def process_image(data: ImageRequest):
     try:
         image_bytes = base64.b64decode(data.image)
 
-        # You can also ask a custom question here:
         prompt = "Extract only the company name and candidate name from the certificate. give the output in one line only separated by a comma and no other punctuation."
 
         response = model.generate_content([
