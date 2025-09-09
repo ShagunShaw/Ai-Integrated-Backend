@@ -1,26 +1,44 @@
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import base64
 import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 
-load_dotenv()  
-app = Flask(__name__)
+# Load environment variables
+load_dotenv()
 
-# Baad mei yh api key ko .env mei daal dena
-genai.configure(api_key= os.getenv("API_KEY"))
+# Initialize FastAPI app
+app = FastAPI()
+
+# Configure the Gemini model
+genai.configure(api_key=os.getenv("API_KEY"))
 model = genai.GenerativeModel("gemini-2.0-flash")
 
-@app.route('/ask', methods=["GET", "POST"])
-def home():
-    data = request.json
-    user_input = data.get("query", "")          # If "query" does not exist, it will return the default value "" (an empty string).
+# Request body model
+class ImageRequest(BaseModel):
+    image: str  # base64 string
+    filename: str
+    mimetype: str
 
-    if not user_input:
-        return jsonify({"error": "Query is not present"}), 400
+@app.post("/process-image")
+async def process_image(data: ImageRequest):
+    try:
+        image_bytes = base64.b64decode(data.image)
 
-    response = model.generate_content(user_input)
+        # You can also ask a custom question here:
+        prompt = "Extract only the company name and candidate name from the certificate. give the output in one line only separated by a comma and no other punctuation."
 
-    return jsonify({"response": response.text})             # if status code is not mentioned here, Flask defaults it to 200 
+        response = model.generate_content([
+            prompt,
+            {
+                "mime_type": data.mimetype,
+                "data": image_bytes
+            }
+        ])
 
-if __name__ == '__main__':
-    app.run(port= 5000, debug=True)
+        return {"response": response.text}
+
+    except Exception as e:
+        print("Error:", e)
+        raise HTTPException(status_code=500, detail="Failed to process image")

@@ -1,25 +1,46 @@
 import express from "express";
 import axios from "axios";
+import multer from "multer";
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({extended: true}))
+
+
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  }
+});
 
 // Route to handle frontend requests
-app.post("/ask-ai", async (req, res) => {
+app.post("/ask-ai", upload.single('image'), async (req, res) => {
   try {
-      const { query } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image uploaded' });
+    }
 
-    // Forward request to Flask service
-    const flaskResponse = await axios.post("http://localhost:5000/ask", {
-      query: query,
+    const fileBase64 = req.file.buffer.toString('base64');
+
+    // Send to Python backend
+    const response = await axios.post('http://localhost:5000/process-image', {
+      image: fileBase64,
+      filename: req.file.originalname,
+      mimetype: req.file.mimetype
     });
-    
-    res.json({
-      aiResponse: flaskResponse.data.response,
-    });
-  } catch (error) {
-    console.error("Error:", error.message);
-    res.status(500).json({ error: "Something went wrong: ", error });
+
+    return res.json({ result: response.data });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to process image', details: err.message });
   }
 });
 
