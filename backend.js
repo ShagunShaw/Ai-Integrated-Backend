@@ -36,7 +36,8 @@ app.post("/ask-ai", upload.single('image'), async (req, res) => {
       mimetype: req.file.mimetype
     });
 
-    return res.json({ result: response.data });
+
+    return res.json({ Company: response.data.Company, Candidate: response.data.Candidate });
 
   } catch (err) {
     console.error(err);

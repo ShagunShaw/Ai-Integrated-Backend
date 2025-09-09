@@ -35,7 +35,13 @@ async def process_image(data: ImageRequest):
             }
         ])
 
-        return {"response": response.text}
+        text= response.text.split(",")
+        jsonResponse = {
+            "Company": text[0].strip(),
+            "Candidate": text[1].strip()
+        }
+
+        return jsonResponse
 
     except Exception as e:
         print("Error:", e)
