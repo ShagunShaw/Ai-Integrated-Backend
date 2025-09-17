@@ -38,7 +38,8 @@ async def process_image(data: ImageRequest):
         text= response.text.split(",")
         jsonResponse = {
             "Company": text[0].strip(),
-            "Candidate": text[1].strip()
+            "Candidate": text[1].strip(),
+            "status": "verified"
         }
 
         return jsonResponse

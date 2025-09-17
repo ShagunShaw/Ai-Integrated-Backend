@@ -37,7 +37,7 @@ app.post("/ask-ai", upload.single('image'), async (req, res) => {
     });
 
 
-    return res.json({ Company: response.data.Company, Candidate: response.data.Candidate });
+    return res.json(response.data);
 
   } catch (err) {
     console.error(err);
