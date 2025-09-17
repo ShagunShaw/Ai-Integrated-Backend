@@ -47,3 +47,8 @@ async def process_image(data: ImageRequest):
     except Exception as e:
         print("Error:", e)
         raise HTTPException(status_code=500, detail="Failed to process image")
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # use PORT if defined, else 5000
+    uvicorn.run("index:app", host="0.0.0.0", port=port, reload=True)
