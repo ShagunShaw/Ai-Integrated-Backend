@@ -30,20 +30,28 @@ app.post("/ask-ai", upload.single('image'), async (req, res) => {
     const fileBase64 = req.file.buffer.toString('base64');
 
     // Calling the python API
-    const response = await axios.post('http://localhost:5000/process-image', {
+    const response = await axios.post('http://localhost:8000/process-image', {
       image: fileBase64,
       filename: req.file.originalname,
       mimetype: req.file.mimetype
     });
 
+    if (response.data.error) {
+      return res.status(500).json({ error: 'Error from Python API', details: response.data.error });
+    }
 
-    return res.json(response.data);
+    if (response.data.status === "not verified") {
+      return res.status(400).json({ error: 'Failed to process image, as the uploaded image is not a certificate' });
+    }
+
+    return res.status(200).json(response.data);
 
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Failed to process image', details: err.message });
+    return res.status(500).json({ error: 'Failed to process image in Node.js', details: err.message });
   }
 });
+
+app.get("/", (req, res) => res.send("Node.js Backend is running"));
 
 app.listen(3000, () => {
   console.log("Node.js backend running on http://localhost:3000");

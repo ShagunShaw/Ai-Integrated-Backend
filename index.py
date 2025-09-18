@@ -26,7 +26,7 @@ async def process_image(data: ImageRequest):
     try:
         image_bytes = base64.b64decode(data.image)
 
-        prompt = "Extract only the company name and candidate name from the certificate. give the output in one line only separated by a comma and no other punctuation."
+        prompt = "Extract only the company name and candidate name from the certificate. give the output in one line only separated by a comma and no other punctuation. If there is no certificate available, then just return NONE and nothing else."
 
         response = model.generate_content([
             prompt,
@@ -35,6 +35,11 @@ async def process_image(data: ImageRequest):
                 "data": image_bytes
             }
         ])
+
+
+        if(response.text.strip().upper() == "NONE"):
+            res= {"status": "not verified", "response": response.text.strip().upper()}
+            return res
 
         text= response.text.split(",")
         jsonResponse = {
@@ -46,8 +51,7 @@ async def process_image(data: ImageRequest):
         return jsonResponse
 
     except Exception as e:
-        print("Error:", e)
-        raise HTTPException(status_code=500, detail="Failed to process image")
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":
